@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lysterfield Sailing Club Results</title>
+    <style>
+        /* CSS Styles (Existing styles merged with additions for boat list) */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f8ff;
+        }
+        h1, h2, h3 {
+            color: #003366;
+        }
+        h4 { /* Style for Race N headers */
+             color: #003366;
+             margin-top: 15px;
+             margin-bottom: 5px;
+             border-bottom: 1px solid #ccc;
+             padding-bottom: 3px;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box; /* Important for width: 100% */
+        }
+        /* Allow inputs/selects in specific containers to be auto width */
+        .filter-group select, .filter-group input,
+        .series-select select, .series-select input,
+        .short-course-race-entry select, .short-course-race-entry input { /* Added short course */
+            width: auto;
+            padding: 4px 6px; /* Smaller padding for table inputs */
+            font-size: 13px; /* Slightly smaller font */
+        }
+         /* Make time inputs wider in short course table */
+        .short-course-race-entry input[type="text"] {
+             min-width: 80px;
+         }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .checkbox-group input[type="checkbox"] { /* Target only checkboxes */
+            width: auto;
+            margin-right: 8px;
+        }
+        .checkbox-group label {
+            display: inline;
+            margin-bottom: 0;
+            font-weight: normal; /* Normal weight for checkbox labels */
+        }
+        button {
+            background-color: #003366;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 5px; /* Add bottom margin for wrapping */
+        }
+        button:hover {
+            background-color: #004080;
+        }
+        .btn-secondary { background-color: #4682B4; }
+        .btn-secondary:hover { background-color: #5891c4; }
+        .btn-warning { background-color: #ff9800; }
+        .btn-warning:hover { background-color: #e68a00; }
+        .btn-danger { background-color: #dc3545; }
+        .btn-danger:hover { background-color: #c82333; }
+        .btn-edit { background-color: #28a745; }
+        .btn-edit:hover { background-color: #218838; }
+        .btn-save { background-color: #17a2b8; }
+        .btn-save:hover { background-color: #138496; }
+        .btn-create-race { background-color: #ff9800; } /* Orange for Create Race */
+        .btn-create-race:hover { background-color: #e68a00; }
+
+        /* Results Styling */
+        .results-table, #boat-list-table, #entries-table, .short-course-race-table { /* Apply common table styles */
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .results-table th, #boat-list-table th, #entries-table th, .short-course-race-table th {
+            background-color: #003366;
+            color: white;
+            text-align: left;
+            padding: 6px 8px;
+            font-weight: bold;
+        }
+        .results-table td, #boat-list-table td, #entries-table td, .short-course-race-table td {
+            padding: 4px 8px;
+            border: 1px solid #ddd; /* Add border to all table cells */
+            text-align: left;
+            vertical-align: middle; /* Align content vertically */
+        }
+        .results-table tr:nth-child(even), #boat-list-table tr:nth-child(even),
+        #entries-table tr:nth-child(even), .short-course-race-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .results-table tr:hover, #boat-list-table tr:hover,
+        #entries-table tr:hover, .short-course-race-table tr:hover {
+            background-color: #e8f4ff;
+        }
+
+        .race-info-panel {
+            background-color: #f0f8ff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        .race-info-panel h3 { margin-top: 0; margin-bottom: 5px; }
+        .race-info-panel p { margin: 5px 0; }
+
+        /* Removed colour rules */
+
+        .discarded { text-decoration: line-through; color: #888; font-style: italic; }
+        .legend { font-size: 12px; margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px; }
+        .legend span { margin-right: 5px; display: inline-block; }
+        .legend strong { margin-right: 10px; }
+        .legend .discarded-example { text-decoration: line-through; font-style: italic; color: #888; }
+
+        .actions { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; } /* Added align-items */
+        .actions button { margin-right: 0; margin-bottom: 0; padding: 3px 6px; font-size: 10px; } /* Removed bottom margin */
+
+        .entry-form, #boat-list-form /* Apply style to both forms */ {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .status-option { display: flex; align-items: center; margin: 10px 0; }
+        /* Make radio buttons smaller and aligned */
+        .status-option input[type="radio"] {
+             width: auto;
+             margin-right: 8px;
+             padding: 0; /* Remove default padding */
+             vertical-align: middle; /* Align with label text */
+        }
+        .status-option label {
+            display: inline; /* Allow label next to radio */
+            margin-bottom: 0; /* Remove block spacing */
+            font-weight: normal; /* Normal weight */
+             vertical-align: middle; /* Align with radio button */
+        }
+        .entry-buttons { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .result-highlight { background-color: #fffce8 !important; }
+        .tab-buttons { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 5px; }
+        .tab-buttons button { margin-right: 0; }
+        .tab-content { display: none; }
+        .active-tab { display: block; }
+        .active-button { background-color: #0056b3; }
+        .race-card { border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 15px; background-color: #f9f9f9; }
+        .race-card h3 { margin-top: 0; }
+        .race-info { display: flex; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; }
+        .race-actions { margin-top: 10px; }
+        .series-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .series-select { margin-bottom: 20px; }
+        .series-date { margin-top: 10px; }
+        .edit-result-form { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 4px; background-color: #f8f9fa; }
+        .edit-mode-warning { background-color: #fff3cd; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #ffeeba; color: #856404; }
+        .race-view-container { margin-top: 15px; }
+        .race-selector { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .race-selector button { padding: 5px 10px; font-size: 12px; }
+        .race-button { background-color: #f2f2f2; color: #333; border: 1px solid #ddd; }
+        .race-button.active { background-color: #003366; color: white; }
+        .race-button.has-results { border: 2px solid #28a745; }
+        #results-table th:last-child, #results-table td:last-child { width: auto; min-width: 50px; text-align: center; } /* Actions col */
+        #boat-list-table th:last-child, #boat-list-table td:last-child { width: auto; min-width: 100px; text-align: center; } /* Actions col for boat list */
+        #entries-table th:last-child, #entries-table td:last-child { width: auto; min-width: 100px; text-align: center; } /* Actions col for entries */
+        .short-course-race-table th:nth-child(5), .short-course-race-table td:nth-child(5) { width: 120px; } /* Status Col Width */
+        .short-course-race-table th:nth-child(6), .short-course-race-table td:nth-child(6) { width: 100px; } /* Time Col Width */
+        .short-course-race-table th:last-child, .short-course-race-table td:last-child { width: auto; min-width: 60px; text-align: center; } /* Actions Col Width */
+
+        .series-results-table td, .series-results-table th { white-space: nowrap; }
+        .series-results-table .nr-cell { color: #999; font-style: italic; text-align: center; }
+        .action-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
+        .action-buttons button { margin-right: 0; }
+        /* Specific styling for saved boat dropdown */
+        #saved-boat-selector { margin-bottom: 20px; /* Optional: Adjust spacing */ }
+        #saved-boat-selector label { margin-bottom: 8px; }
+        .hidden { display: none !important; } /* Utility class */
+
+        /* Container for short course created races */
+        #short-course-races-container {
+            margin-top: 25px;
+            border-top: 2px solid #003366;
+            padding-top: 15px;
+        }
+        .short-course-race-section {
+             border: 1px solid #ccc;
+             border-radius: 5px;
+             padding: 10px 15px;
+             margin-bottom: 15px;
+             background-color: #f9f9f9;
+        }
+        .short-course-race-section h4 { margin-top: 0; } /* Reset top margin for section header */
+
+        /* GitHub Pages specific notice */
+        #github-notice {
+             margin: 15px 0;
+             padding: 10px 15px;
+             background-color: #fff3cd;
+             border: 1px solid #ffeeba;
+             border-radius: 4px;
+             color: #856404;
+             font-size: 14px;
+        }
+        #github-notice strong { color: #664d03; }
+        #github-notice code { background-color: #e9ecef; padding: 2px 4px; border-radius: 3px; }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lysterfield Results App (GitHub Pages Version)</h1>
+
+        <!-- GitHub Pages Notice -->
+        <div id="github-notice">
+            <strong>Important:</strong> Data is loaded from the <code>backup.json</code> file in the repository.
+            Changes made here (adding boats, saving results, etc.) are <strong>temporary for this session only</strong>.
+            To permanently save changes, use the "Export Data for GitHub (backup.json)" button and manually upload the downloaded file to your GitHub repository, replacing the existing <code>backup.json</code>.
+        </div>
+
+        <div class="tab-buttons">
+            <button id="btn-series" class="active-button">Series Management</button>
+            <button id="btn-boat-list">Boat List</button>
+            <button id="btn-race">Race Entry</button>
+            <button id="btn-results">Race Results</button>
+            <button id="btn-series-results">Series Results</button>
+            <button id="btn-race-view">Race Viewer</button>
+        </div>
+
+        <!-- Series Management Tab -->
+        <div id="series-tab" class="tab-content active-tab">
+            <div class="series-header"><h2>Series Management</h2><button id="create-series-btn">Create New Series (This Session)</button></div>
+            <!-- Series Create/Edit Form -->
+            <div id="create-series-form" class="entry-form hidden"> <!-- Start hidden -->
+                <h3>Create/Edit Series (Temporary)</h3>
+                <div class="form-group">
+                    <label for="series-name">Series Name:</label>
+                    <input type="text" id="series-name" placeholder="e.g., Summer Series 2024">
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="series-short-course">
+                    <label for="series-short-course">This is a Short Course Series (Races created dynamically)</label>
+                </div>
+                <div id="standard-series-options"> <!-- Wrapper for options hidden in short course -->
+                    <div class="form-group">
+                        <label for="number-of-races">Number of Races Planned:</label>
+                        <input type="number" id="number-of-races" min="1" max="50" value="8">
+                    </div>
+                    <div class="form-group">
+                        <label for="races-per-discard">Discard 1 race after how many completed races? (Enter 0 for no discards)</label>
+                        <input type="number" id="races-per-discard" min="0" max="20" value="4">
+                        <small>Example: If set to 5, 1 discard applies after race 5, 2 discards after race 10, etc.</small>
+                    </div>
+                </div>
+                 <!-- DNC rule applies to both types -->
+                <div class="form-group">
+                    <label>DNC Points Calculation:</label>
+                    <div class="status-option">
+                        <input type="radio" id="dnc-rule-race" name="dnc-scoring-rule" value="raceEntries" checked>
+                        <label for="dnc-rule-race">Entries in specific Race + 1</label>
+                    </div>
+                    <div class="status-option">
+                        <input type="radio" id="dnc-rule-series" name="dnc-scoring-rule" value="seriesCompetitors">
+                        <label for="dnc-rule-series">Total unique competitors in Series + 1</label>
+                    </div>
+                </div>
+
+                <input type="hidden" id="edit-series-id">
+                <div class="entry-buttons">
+                    <button id="save-series-btn">Save Series (This Session)</button> <!-- Text updated -->
+                    <button id="cancel-series-btn" class="btn-secondary">Cancel</button>
+                </div>
+            </div>
+            <!-- Series List Display -->
+            <div id="series-list">
+                <!-- Series cards will be generated here -->
+            </div>
+
+            <!-- MODIFIED: Data Management Section Removed Import -->
+            <div class="action-buttons" style="margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;">
+                <h3>Data Management</h3>
+                <button id="export-github-btn" class="btn-warning">Export Data for GitHub (backup.json)</button> <!-- Changed ID and Text -->
+                <!-- Import Button Removed -->
+                <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                    Export creates the <code>backup.json</code> file. You must upload this file to your GitHub repository, replacing the existing one, to update the live results page.
+                    Importing data requires manually updating the <code>backup.json</code> file in the repository.
+                </p>
+            </div>
+             <!-- Removed original Export/Import buttons and file input -->
+             <!-- <input type="file" id="import-file-input" accept=".json" style="display: none;"> -->
+
+
+        </div> <!-- End of series-tab -->
+
+
+        <!-- Boat List Tab -->
+        <div id="boat-list-tab" class="tab-content">
+             <div class="series-header">
+                <h2>Manage Boat List</h2>
+                <button id="show-add-boat-form-btn">Add New Boat (This Session)</button>
+            </div>
+             <div id="boat-list-form" class="entry-form hidden"> <!-- Start hidden -->
+                 <h3 id="boat-form-title">Add New Boat (Temporary)</h3>
+                 <div class="form-group">
+                     <label for="boat-sail-number">Sail Number:</label>
+                     <input type="text" id="boat-sail-number" placeholder="e.g., AUS123 (Must be unique)">
+                 </div>
+                  <div class="form-group">
+                     <label for="boat-class-list">Default Boat Class:</label>
+                     <select id="boat-class-list">
+                         <option value="">Select boat class</option>
+                         <!-- Populated from yardstick data -->
+                     </select>
+                 </div>
+                 <div class="checkbox-group">
+                     <input type="checkbox" id="boat-manual-class-check">
+                     <label for="boat-manual-class-check">Enter boat class manually</label>
+                 </div>
+                 <div id="boat-manual-class-input" class="form-group hidden"> <!-- Use class -->
+                     <label for="boat-manual-boat-class">Custom Boat Class:</label>
+                     <input type="text" id="boat-manual-boat-class" placeholder="Enter custom boat class">
+                 </div>
+                  <div class="form-group">
+                     <label for="boat-skipper">Default Skipper Name:</label>
+                     <input type="text" id="boat-skipper" placeholder="Full name">
+                 </div>
+                  <div class="form-group">
+                     <label for="boat-yardstick">Default Yardstick:</label>
+                     <input type="number" id="boat-yardstick" step="0.1" placeholder="Auto-filled or enter manually">
+                 </div>
+                  <div class="checkbox-group">
+                     <input type="checkbox" id="boat-manual-yardstick-check">
+                     <label for="boat-manual-yardstick-check">Enter yardstick manually</label>
+                 </div>
+                 <input type="hidden" id="editing-boat-id" value="">
+                 <div class="entry-buttons">
+                     <button id="save-boat-list-btn">Save Boat (This Session)</button> <!-- Text updated -->
+                     <button id="cancel-boat-list-btn" class="btn-secondary">Cancel</button>
+                 </div>
+             </div>
+             <h3>Saved Boats (Loaded from backup.json)</h3>
+              <div style="overflow-x: auto;">
+                 <table id="boat-list-table">
+                     <thead>
+                         <tr>
+                             <th>Sail #</th>
+                             <th>Boat Class</th>
+                             <th>Skipper</th>
+                             <th>Yardstick</th>
+                             <th>Actions</th>
+                         </tr>
+                     </thead>
+                     <tbody id="boat-list-body"></tbody>
+                 </table>
+             </div>
+
+             <!-- MODIFIED: Boat List Data Management Section Removed -->
+             <!--
+              <div class="action-buttons" style="margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;">
+                 <h3>Boat List Data Management</h3>
+                 <button id="export-boat-list-btn" class="btn-secondary">Export Boat List Only</button>
+                 <button id="import-boat-list-btn" class="btn-warning">Import Boat List (Replaces Current)</button>
+                 <input type="file" id="import-boat-list-file-input" accept=".json" style="display: none;">
+                 <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                     Export creates a JSON backup of the current saved boat list.
+                     Import will <strong>replace</strong> the current boat list with the data from the selected file. Series data is unaffected.
+                 </p>
+             </div>
+             -->
+        </div> <!-- End of boat-list-tab -->
+
+        <!-- Race Entry Tab (MODIFIED for Short Course) -->
+        <div id="race-tab" class="tab-content">
+            <h2>Race Entry</h2>
+
+           <div class="series-select">
+                <label for="select-series">Select Series:</label>
+                <select id="select-series"></select>
+                <span id="race-selector-wrapper">
+                    <label for="select-race" style="margin-left: 15px;">Select Race Number:</label>
+                    <select id="select-race"></select>
+                </span>
+            </div>
+
+            <div id="edit-mode-warning" class="edit-mode-warning hidden"></div>
+
+            <!-- Entry Form -->
+            <div class="entry-form">
+                <h3 id="entry-form-title">Add/Edit Boat Entry (This Session)</h3>
+
+                <div id="saved-boat-selector" class="form-group">
+                    <label for="select-saved-boat">Select Saved Boat (Optional):</label>
+                    <select id="select-saved-boat">
+                        <option value="">-- Select Saved Boat --</option>
+                        <!-- Populated from boatList -->
+                    </select>
+                    <small>Selecting a boat will pre-fill the details below. You can still modify them.</small>
+                </div>
+
+                <div class="form-group"><label for="sail-number">Sail Number:</label><input type="text" id="sail-number" placeholder="e.g. AUS123"></div>
+                <div class="form-group"><label for="boat-class">Boat Class:</label><select id="boat-class"><option value="">Select boat class</option></select></div>
+                <div class="checkbox-group"><input type="checkbox" id="manual-class-check"><label for="manual-class-check">Enter boat class manually</label></div>
+                <div id="manual-class-input" class="form-group hidden"><label for="manual-boat-class">Custom Boat Class:</label><input type="text" id="manual-boat-class"></div>
+                <div class="form-group"><label for="skipper">Skipper Name:</label><input type="text" id="skipper" placeholder="Full name"></div>
+                <div class="form-group"><label for="yardstick">Yardstick (PN):</label><input type="number" id="yardstick" step="0.1" placeholder="Auto-filled or enter manually"></div>
+                <div class="checkbox-group"><input type="checkbox" id="manual-yardstick-check"><label for="manual-yardstick-check">Enter yardstick manually</label></div>
+
+                <div id="standard-entry-fields">
+                    <div class="form-group"><label>Race Status:</label><!-- Status Radio Buttons -->
+                        <div class="status-option"><input type="radio" id="status-finished" name="race-status" value="finished" checked><label for="status-finished">Finished</label></div>
+                        <div class="status-option"><input type="radio" id="status-dnf" name="race-status" value="DNF"><label for="status-dnf">DNF</label></div>
+                        <div class="status-option"><input type="radio" id="status-dns" name="race-status" value="DNS"><label for="status-dns">DNS</label></div>
+                        <div class="status-option"><input type="radio" id="status-ocs" name="race-status" value="OCS"><label for="status-ocs">OCS</label></div>
+                        <div class="status-option"><input type="radio" id="status-dsq" name="race-status" value="DSQ"><label for="status-dsq">DSQ</label></div>
+                        <div class="status-option"><input type="radio" id="status-ood" name="race-status" value="OOD"><label for="status-ood">OOD</label></div>
+                    </div>
+                    <div id="time-inputs" class="form-group"><label for="elapsed-time">Elapsed Time (hh:mm:ss):</label><input type="text" id="elapsed-time" placeholder="e.g. 01:30:45"></div>
+                </div>
+
+                <div class="entry-buttons">
+                    <button id="add-boat">Add Boat (This Session)</button> <!-- Text changes dynamically -->
+                    <button id="update-boat" class="btn-edit hidden">Update Boat (This Session)</button>
+                    <button id="cancel-update" class="btn-secondary hidden">Cancel Update</button>
+                    <button id="clear-form" class="btn-secondary">Clear Form</button>
+                </div>
+                <input type="hidden" id="editing-entry-index" value="-1">
+                <input type="hidden" id="editing-short-course-race-index" value="-1">
+            </div>
+
+             <!-- Standard Entries Display -->
+            <div id="standard-entries-display">
+                <h3 id="current-entries-heading">Current Entries for Selected Race (This Session)</h3>
+                <div style="overflow-x: auto;">
+                    <table id="entries-table">
+                        <thead><tr><th>Sail #</th><th>Boat Class</th><th>Skipper</th><th>Yardstick</th><th>Status</th><th>Elapsed Time</th><th>Actions</th></tr></thead>
+                        <tbody id="entries-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+             <!-- Short Course Staging Area -->
+            <div id="short-course-staging-display" class="hidden">
+                <h3 id="short-course-pool-heading">Next Race Pool (Add/Remove Boats Here)</h3>
+                 <div style="overflow-x: auto;">
+                     <table id="short-course-pool-table" class="results-table">
+                         <thead><tr><th>Sail #</th><th>Boat Class</th><th>Skipper</th><th>Yardstick</th><th>Actions</th></tr></thead>
+                         <tbody id="short-course-pool-body"></tbody>
+                     </table>
+                 </div>
+                 <div class="action-buttons">
+                     <button id="create-short-course-race-btn" class="btn-create-race">Create Race 1 (This Session)</button>
+                 </div>
+            </div>
+
+             <!-- Short Course Created Races Container -->
+             <div id="short-course-races-container" class="hidden">
+                 <h3>Created Races (This Session)</h3>
+                 <!-- Race N sections will be appended here by JS -->
+             </div>
+
+            <div style="margin-top: 20px;" class="action-buttons">
+                <button id="calculate-results">Calculate Race Results & View</button>
+                <button id="clear-all" class="btn-warning">Clear Current List/Pool (This Session)</button>
+                <button id="clear-short-course-session-btn" class="btn-danger hidden">Clear Created Races (This Session)</button>
+            </div>
+        </div>
+
+
+        <!-- Race Results Tab -->
+        <div id="results-tab" class="tab-content">
+             <h2>Race Results</h2>
+             <div class="series-select"><label for="results-series-select">Series:</label><select id="results-series-select"></select><label for="results-race-select">Race:</label><select id="results-race-select"></select></div>
+             <div id="result-race-info"></div>
+             <!-- MODIFIED: Changed button text -->
+             <div class="action-buttons"><button id="save-results-tab-btn" class="btn-save">Update Series Data (This Session)</button><button id="edit-race-entries" class="btn-edit">Edit Race Entries (This Session)</button><button id="edit-results-directly" class="btn-warning">Direct Edit (This Session)</button></div>
+             <div id="direct-edit-warning" class="edit-mode-warning hidden"></div>
+             <div style="overflow-x: auto;"><table id="results-table" class="results-table"><thead><tr><th>Pos</th><th>Sail No</th><th>Boat Type</th><th>Helm</th><th>YS</th><th>Finish</th><th>Elapsed</th><th>Corrected</th><th>Points</th><th>Actions</th></tr></thead><tbody id="results-body"></tbody></table></div>
+             <div id="edit-result-form" class="edit-result-form hidden"><h3>Edit Result (Directly - Temporary)</h3><p>Editing: <strong id="edit-result-label"></strong></p><!-- Direct Edit Fields -->
+                <div class="form-group"><label for="edit-status-direct">Status:</label><select id="edit-status-direct"></select></div>
+                <div id="edit-time-inputs-direct" class="form-group"><label for="edit-elapsed-time-direct">Elapsed Time:</label><input type="text" id="edit-elapsed-time-direct" placeholder="hh:mm:ss"></div>
+                <div class="form-group"><label for="edit-position-direct">Position:</label><input type="text" id="edit-position-direct" placeholder="e.g., 3 or DNF"></div>
+                <div class="form-group"><label for="edit-points-direct">Points:</label><input type="number" step="0.1" id="edit-points-direct"></div>
+                <input type="hidden" id="edit-result-index">
+                <div class="entry-buttons"><button id="save-edit-result">Update Displayed Result (This Session)</button><button id="cancel-edit-result" class="btn-secondary">Cancel</button></div>
+             </div>
+        </div>
+
+        <!-- Series Results Tab -->
+        <div id="series-results-tab" class="tab-content">
+             <h2>Series Results (Based on loaded data)</h2>
+             <div class="series-select"><label for="view-series-select">Select Series:</label><select id="view-series-select"></select></div>
+             <div id="series-summary"></div>
+             <div style="overflow-x: auto;"><table id="series-results-table" class="results-table series-results-table"><thead id="series-results-header"></thead><tbody id="series-results-body"></tbody></table></div>
+             <div class="legend"><strong>Legend:</strong><!-- Populated by JS --></div>
+        </div>
+
+        <!-- Race Viewer Tab -->
+        <div id="race-view-tab" class="tab-content">
+             <h2>Race Viewer (Based on loaded data)</h2>
+             <div class="series-select"><label for="view-all-series-select">Select Series:</label><select id="view-all-series-select"></select></div>
+             <div id="race-summary-view"></div>
+             <div class="race-selector"></div>
+             <div class="race-view-container"><div id="individual-race-info"></div><div style="overflow-x: auto;"><table id="individual-race-results" class="results-table"><thead><!-- Set by JS --></thead><tbody id="individual-race-body"></tbody></table></div></div>
+        </div>
+
+    </div>
+
+    <script>
+        // Yardstick data (still needed for dropdowns)
+        const yardstickData = [
+            { boatClass: "125", yardstick: 123 }, { boatClass: "145", yardstick: 113 }, { boatClass: "29er", yardstick: 95 }, { boatClass: "420", yardstick: 112 }, { boatClass: "470", yardstick: 101 },
+            { boatClass: "505", yardstick: 93 }, { boatClass: "B14", yardstick: 94 }, { boatClass: "Byte", yardstick: 125.4 }, { boatClass: "Byte CII", yardstick: 120.4 }, { boatClass: "Cherub", yardstick: 100 },
+            { boatClass: "Contender", yardstick: 106.5 }, { boatClass: "Corsair", yardstick: 119.5 }, { boatClass: "E Class (Lazy E)", yardstick: 113 }, { boatClass: "Europe Dinghy", yardstick: 120 },
+            { boatClass: "Fireball", yardstick: 101 }, { boatClass: "Finn", yardstick: 110 }, { boatClass: "Flying Ant", yardstick: 135 }, { boatClass: "Flying 11", yardstick: 117 }, { boatClass: "Heron", yardstick: 134 },
+            { boatClass: "Impulse", yardstick: 118.5 }, { boatClass: "Impulse 6.6", yardstick: 124.5 }, { boatClass: "Javelin", yardstick: 97.5 }, { boatClass: "Jubilee", yardstick: 130 }, { boatClass: "Laser", yardstick: 114 },
+            { boatClass: "Laser Radial", yardstick: 118.5 }, { boatClass: "Laser 4.7", yardstick: 127 }, { boatClass: "Mirror", yardstick: 143 }, { boatClass: "Moth Skiff", yardstick: 60 }, { boatClass: "Moth Scow", yardstick: 115 },
+            { boatClass: "NS14", yardstick: 108 }, { boatClass: "OK Dinghy", yardstick: 115.5 }, { boatClass: "Open Bic", yardstick: 153.3 }, { boatClass: "Optimist", yardstick: 170 }, { boatClass: "Pacer", yardstick: 127.5 },
+            { boatClass: "Pacer Non Spinnaker", yardstick: 130.4}, { boatClass: "RS 100 8.4", yardstick: 106 }, { boatClass: "RS 100 10.2", yardstick: 103 }, { boatClass: "RS 200", yardstick: 108.5 }, { boatClass: "RS 300", yardstick: 103.4 },
+            { boatClass: "RS 400", yardstick: 96.6 }, { boatClass: "RS 500", yardstick: 102.7 }, { boatClass: "RS 600", yardstick: 87.2 }, { boatClass: "RS 700", yardstick: 83.8 }, { boatClass: "RS 800", yardstick: 86.3 },
+            { boatClass: "RS Aero 5", yardstick: 116.8 }, { boatClass: "RS Aero 6", yardstick: 114.6 }, { boatClass: "RS Aero 7", yardstick: 112.5 }, { boatClass: "RS Aero 9", yardstick: 108 }, { boatClass: "RS Feva XL", yardstick: 130 },
+            { boatClass: "RS Tera Pro", yardstick: 143.2 }, { boatClass: "RS Tera Sport", yardstick: 153.9 }, { boatClass: "RS Vareo", yardstick: 113.1 }, { boatClass: "RS Vision", yardstick: 123.7 }, { boatClass: "Sabre", yardstick: 127 },
+            { boatClass: "Sailfish", yardstick: 132 }, { boatClass: "Sparrow", yardstick: 145 }, { boatClass: "Solo", yardstick: 123.5 }, { boatClass: "Sabot", yardstick: 160.5 }, { boatClass: "Sharpie", yardstick: 95 },
+            { boatClass: "Spiral", yardstick: 124 }, { boatClass: "Tasar", yardstick: 108 },
+        ];
+
+        // --- App State ---
+        let entries = []; // Holds entries for standard races OR the "pool" for short courses
+        let results = []; // Holds calculated results for display on Results tab
+        let series = []; // Holds all series data (LOADED FROM backup.json)
+        let boatList = []; // Holds saved boat data (LOADED FROM backup.json)
+        let shortCourseSessionRaces = []; // Holds {raceNumber, entries:[{..., status, elapsedTime}]} for short course races created *this session*
+        let currentSeries = null;
+        let currentRace = null; // Race number for standard series
+        let editMode = false; // For standard races, loading saved data
+        let directEditMode = false;
+        let resultBeingEdited = null; // Store original state for direct edit cancel
+
+        // --- DOM Elements ---
+        // Tabs & Buttons
+        const seriesTab = document.getElementById('series-tab');
+        const raceTab = document.getElementById('race-tab');
+        const resultsTab = document.getElementById('results-tab');
+        const seriesResultsTab = document.getElementById('series-results-tab');
+        const raceViewTab = document.getElementById('race-view-tab');
+        const boatListTab = document.getElementById('boat-list-tab');
+        const btnSeries = document.getElementById('btn-series');
+        const btnRace = document.getElementById('btn-race');
+        const btnResults = document.getElementById('btn-results');
+        const btnSeriesResults = document.getElementById('btn-series-results');
+        const btnRaceView = document.getElementById('btn-race-view');
+        const btnBoatList = document.getElementById('btn-boat-list');
+
+        // Race Entry Form Elements
+        const entryFormTitle = document.getElementById('entry-form-title');
+        const sailNumber = document.getElementById('sail-number');
+        const boatClassSelect = document.getElementById('boat-class');
+        const skipperName = document.getElementById('skipper');
+        const yardstickValue = document.getElementById('yardstick');
+        const elapsedTime = document.getElementById('elapsed-time');
+        const timeInputs = document.getElementById('time-inputs');
+        const statusRadios = document.querySelectorAll('input[name="race-status"]');
+        const manualClassCheck = document.getElementById('manual-class-check');
+        const manualClassInput = document.getElementById('manual-class-input');
+        const manualBoatClass = document.getElementById('manual-boat-class');
+        const manualYardstickCheck = document.getElementById('manual-yardstick-check');
+        const addBoatBtn = document.getElementById('add-boat');
+        const updateBoatBtn = document.getElementById('update-boat');
+        const cancelUpdateBtn = document.getElementById('cancel-update');
+        const clearFormBtn = document.getElementById('clear-form');
+        const editingEntryIndexInput = document.getElementById('editing-entry-index');
+        const editingShortCourseRaceIndexInput = document.getElementById('editing-short-course-race-index'); // For editing within short course race
+        const entriesBody = document.getElementById('entries-body'); // Standard entries table body
+        const calculateResultsBtn = document.getElementById('calculate-results');
+        const clearAllBtn = document.getElementById('clear-all');
+        const editModeWarning = document.getElementById('edit-mode-warning');
+        const selectSavedBoat = document.getElementById('select-saved-boat');
+        const standardEntryFields = document.getElementById('standard-entry-fields'); // Wrapper for status/time
+        const raceSelectorWrapper = document.getElementById('race-selector-wrapper'); // Wrapper for race dropdown label/select
+
+        // Standard Race UI Elements
+        const standardEntriesDisplay = document.getElementById('standard-entries-display');
+        const currentEntriesHeading = document.getElementById('current-entries-heading');
+
+        // Short Course UI Elements
+        const shortCourseStagingDisplay = document.getElementById('short-course-staging-display');
+        const shortCoursePoolHeading = document.getElementById('short-course-pool-heading');
+        const shortCoursePoolBody = document.getElementById('short-course-pool-body');
+        const createShortCourseRaceBtn = document.getElementById('create-short-course-race-btn');
+        const shortCourseRacesContainer = document.getElementById('short-course-races-container');
+        const clearShortCourseSessionBtn = document.getElementById('clear-short-course-session-btn');
+
+        // Series/Race Selection Dropdowns
+        const selectSeries = document.getElementById('select-series');
+        const selectRace = document.getElementById('select-race');
+        const resultsSeries = document.getElementById('results-series-select');
+        const resultsRace = document.getElementById('results-race-select');
+        const viewSeries = document.getElementById('view-series-select');
+        const viewAllSeries = document.getElementById('view-all-series-select');
+
+        // Results Tab Elements
+        const resultsBody = document.getElementById('results-body');
+        const resultRaceInfo = document.getElementById('result-race-info');
+        const saveResultsTabBtn = document.getElementById('save-results-tab-btn');
+        const editRaceEntriesBtn = document.getElementById('edit-race-entries');
+        const editResultsDirectlyBtn = document.getElementById('edit-results-directly');
+        const directEditWarning = document.getElementById('direct-edit-warning');
+
+        // Series Results Tab Elements
+        const seriesResultsBody = document.getElementById('series-results-body');
+        const seriesResultsHeader = document.getElementById('series-results-header');
+        const seriesSummary = document.getElementById('series-summary');
+        const legendDiv = document.querySelector('.legend');
+
+        // Race Viewer Tab Elements
+        const raceSummaryView = document.getElementById('race-summary-view');
+        const raceSelector = document.querySelector('.race-selector');
+        const individualRaceInfo = document.getElementById('individual-race-info');
+        const individualRaceBody = document.getElementById('individual-race-body');
+        const individualRaceHeader = document.querySelector('#individual-race-results thead');
+        if (individualRaceHeader) {
+            individualRaceHeader.innerHTML = '<tr><th>Pos</th><th>Sail No</th><th>Boat Type</th><th>Helm</th><th>YS</th><th>Finish</th><th>Elapsed</th><th>Corrected</th><th>Points</th></tr>';
+        }
+
+        // Series Management Form Elements
+        const createSeriesBtn = document.getElementById('create-series-btn');
+        const saveSeriesBtn = document.getElementById('save-series-btn');
+        const cancelSeriesBtn = document.getElementById('cancel-series-btn');
+        const seriesName = document.getElementById('series-name');
+        const seriesShortCourseCheck = document.getElementById('series-short-course'); // Short Course checkbox
+        const standardSeriesOptions = document.getElementById('standard-series-options'); // Wrapper div
+        const numberOfRaces = document.getElementById('number-of-races');
+        const racesPerDiscardInput = document.getElementById('races-per-discard');
+        const editSeriesId = document.getElementById('edit-series-id');
+        const createSeriesForm = document.getElementById('create-series-form');
+        const seriesList = document.getElementById('series-list');
+
+        // Edit Result Form (Direct) Elements
+        const editResultForm = document.getElementById('edit-result-form');
+        const editResultLabel = document.getElementById('edit-result-label');
+        const editStatusDirect = document.getElementById('edit-status-direct');
+        const editTimeInputsDirect = document.getElementById('edit-time-inputs-direct');
+        const editElapsedTimeDirect = document.getElementById('edit-elapsed-time-direct');
+        const editPositionDirect = document.getElementById('edit-position-direct');
+        const editPointsDirect = document.getElementById('edit-points-direct');
+        const editResultIndex = document.getElementById('edit-result-index');
+        const saveEditResult = document.getElementById('save-edit-result');
+        const cancelEditResult = document.getElementById('cancel-edit-result');
+         if (editStatusDirect && editStatusDirect.options.length === 0) {
+             const statuses = ['finished', 'DNF', 'DNS', 'OCS', 'DSQ', 'OOD'];
+             statuses.forEach(status => {
+                 const option = document.createElement('option'); option.value = status; option.textContent = status.toUpperCase(); editStatusDirect.appendChild(option);
+             });
+         }
+
+        // Boat List Tab Elements
+        const showAddBoatFormBtn = document.getElementById('show-add-boat-form-btn');
+        const boatListForm = document.getElementById('boat-list-form');
+        const boatFormTitle = document.getElementById('boat-form-title');
+        const boatSailNumber = document.getElementById('boat-sail-number');
+        const boatClassList = document.getElementById('boat-class-list');
+        const boatManualClassCheck = document.getElementById('boat-manual-class-check');
+        const boatManualClassInput = document.getElementById('boat-manual-class-input');
+        const boatManualBoatClass = document.getElementById('boat-manual-boat-class');
+        const boatSkipper = document.getElementById('boat-skipper');
+        const boatYardstick = document.getElementById('boat-yardstick');
+        const boatManualYardstickCheck = document.getElementById('boat-manual-yardstick-check');
+        const editingBoatId = document.getElementById('editing-boat-id');
+        const saveBoatListBtn = document.getElementById('save-boat-list-btn');
+        const cancelBoatListBtn = document.getElementById('cancel-boat-list-btn');
+        const boatListTable = document.getElementById('boat-list-table');
+        const boatListBody = document.getElementById('boat-list-body');
+
+        // Export/Import Elements (MODIFIED)
+        const exportGithubBtn = document.getElementById('export-github-btn'); // Changed ID
+        // Import elements removed
+
+        // GitHub Pages Notice
+        const githubNotice = document.getElementById('github-notice');
+
+
+        // --- Utility Functions ---
+        function isValidTimeFormat(timeStr) { if (!timeStr) return false; const regex = /^([0-9]{1,2}):([0-5][0-9]):([0-5][0-9])$/; return regex.test(timeStr); }
+        function timeToSeconds(timeStr) { if (!isValidTimeFormat(timeStr)) return 0; const [hours, minutes, seconds] = timeStr.split(':').map(Number); return hours * 3600 + minutes * 60 + seconds; }
+        function secondsToTime(seconds) { if (isNaN(seconds) || seconds === null || seconds < 0) return ''; seconds = Math.round(seconds); const hours = Math.floor(seconds / 3600); let minutes = Math.floor((seconds % 3600) / 60); let secs = seconds % 60; if (secs === 60) { minutes += 1; secs = 0; } if (minutes === 60) { /* hours += 1; */ minutes = 0; } return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`; }
+        // Simple pluralize helper
+        function pluralize(count, singular, plural = null) { return count === 1 ? singular : (plural || singular + 's'); }
+        // Function to show reminder after session-only saves
+        function showExportReminder() {
+             alert("Change made for this session only. To save permanently, use 'Export Data for GitHub (backup.json)' and upload the file to the repository.");
+        }
+
+
+        // --- Tab Navigation ---
+        function setActiveTab(tabElement) {
+             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
+             document.querySelectorAll('.tab-buttons button').forEach(btn => btn.classList.remove('active-button'));
+
+             if (tabElement) {
+                 tabElement.classList.add('active-tab');
+                 const buttonId = 'btn-' + tabElement.id.replace('-tab', '');
+                 const correspondingButton = document.getElementById(buttonId);
+                 if(correspondingButton) { correspondingButton.classList.add('active-button'); }
+                 else { console.warn("Could not find button for tab:", buttonId); }
+             } else { console.error("setActiveTab called with null element"); }
+
+             // Reset modes/warnings when switching tabs
+             if (tabElement?.id !== 'results-tab') { disableDirectEditMode(); }
+             if (tabElement?.id !== 'race-tab') {
+                editMode = false;
+                editModeWarning?.classList.add('hidden');
+                // Clear short course session data if navigating away from Race Entry tab
+                if (shortCourseSessionRaces.length > 0) {
+                    console.log("Navigating away from Race Entry tab, clearing short course session.");
+                    clearShortCourseSessionData();
+                }
+             }
+             // Use hidden class consistently
+             if (tabElement?.id !== 'boat-list-tab') { boatListForm?.classList.add('hidden'); }
+             if (tabElement?.id !== 'series-tab') { createSeriesForm?.classList.add('hidden'); }
+
+         }
+        if(btnBoatList) btnBoatList.addEventListener('click', () => setActiveTab(boatListTab));
+        if(btnSeries) btnSeries.addEventListener('click', () => setActiveTab(seriesTab));
+        if(btnRace) btnRace.addEventListener('click', () => setActiveTab(raceTab));
+        if(btnResults) btnResults.addEventListener('click', () => setActiveTab(resultsTab));
+        if(btnSeriesResults) btnSeriesResults.addEventListener('click', () => { setActiveTab(seriesResultsTab); if (viewSeries?.value) calculateSeriesResults(); });
+        if(btnRaceView) btnRaceView.addEventListener('click', () => { setActiveTab(raceViewTab); if (viewAllSeries?.value) displayRaceViewer(); });
+
+
+        // --- Yardstick Functions ---
+        function initYardsticks() {
+            yardstickData.sort((a, b) => a.boatClass.localeCompare(b.boatClass));
+            const populateSelect = (selectElement) => {
+                 if (!selectElement) return;
+                 selectElement.innerHTML = '<option value="">Select boat class</option>';
+                 yardstickData.forEach(boat => {
+                     const option = document.createElement('option');
+                     option.value = boat.boatClass;
+                     option.textContent = `${boat.boatClass} (${boat.yardstick})`;
+                     selectElement.appendChild(option);
+                 });
+            }
+            populateSelect(boatClassSelect); // Race entry
+            populateSelect(boatClassList); // Boat list management
+        }
+
+        // --- Boat List Functions ---
+        function renderBoatListTable() { /* ... remains unchanged ... */
+            if (!boatListBody) return;
+            boatListBody.innerHTML = '';
+            boatList.sort((a, b) => a.sailNumber.localeCompare(b.sailNumber));
+
+             if (boatList.length === 0) {
+                  const row = boatListBody.insertRow();
+                  const cell = row.insertCell(); cell.colSpan = 5;
+                  cell.textContent = 'No boats loaded from backup.json. Add boats (temporary) or update backup.json.';
+                  cell.style.textAlign = 'center'; cell.style.fontStyle = 'italic'; cell.style.color = '#666';
+                  return;
+             }
+
+            boatList.forEach(boat => {
+                const row = boatListBody.insertRow();
+                row.innerHTML = `
+                    <td>${boat.sailNumber}</td>
+                    <td>${boat.boatClass}</td>
+                    <td>${boat.skipper}</td>
+                    <td>${boat.yardstick}</td>
+                    <td class="actions">
+                        <button class="btn-edit" onclick="editBoatInList(${boat.id})">Edit (Temp)</button>
+                        <button class="btn-danger" onclick="deleteBoatFromList(${boat.id})">Delete (Temp)</button>
+                    </td>
+                `;
+            });
+            populateSavedBoatDropdown();
+        }
+        function clearBoatListForm() { /* ... remains unchanged ... */
+            if (!boatListForm) return;
+            if(boatSailNumber) boatSailNumber.value = '';
+            if(boatClassList) boatClassList.value = '';
+            if(boatSkipper) boatSkipper.value = '';
+            if(boatYardstick) boatYardstick.value = '';
+            if(boatManualBoatClass) boatManualBoatClass.value = '';
+            if(editingBoatId) editingBoatId.value = '';
+            if(boatManualClassCheck) boatManualClassCheck.checked = false;
+            if(boatManualClassInput) boatManualClassInput.classList.add('hidden'); // Use class
+            if(boatClassList) boatClassList.disabled = false;
+            if(boatManualYardstickCheck) boatManualYardstickCheck.checked = false;
+            if(boatYardstick) boatYardstick.readOnly = true;
+            if(boatFormTitle) boatFormTitle.textContent = "Add New Boat (Temporary)"; // Updated text
+            boatListForm.classList.add('hidden'); // Use hidden class
+            if(boatClassList) boatClassList.dispatchEvent(new Event('change'));
+        }
+        if(showAddBoatFormBtn) showAddBoatFormBtn.addEventListener('click', () => { /* ... updated title ... */
+            clearBoatListForm();
+            if(boatFormTitle) boatFormTitle.textContent = "Add New Boat (Temporary)";
+            if(boatListForm) boatListForm.classList.remove('hidden'); // Use hidden class
+            if(boatSailNumber) boatSailNumber.focus();
+        });
+        if(cancelBoatListBtn) cancelBoatListBtn.addEventListener('click', clearBoatListForm); /* ... remains unchanged ... */
+
+        if(saveBoatListBtn) saveBoatListBtn.addEventListener('click', () => { /* ... REMOVED saveBoatListToStorage() call ... */
+            console.log("Attempting to save boat (this session)..."); // Logging
+            const id = editingBoatId?.value ? parseInt(editingBoatId.value) : null;
+            const sailNum = boatSailNumber?.value.trim().toUpperCase(); // Ensure uppercase
+            const skipper = boatSkipper?.value.trim();
+            const yardstick = parseFloat(boatYardstick?.value);
+            const isManualClass = boatManualClassCheck?.checked;
+            const boatClass = isManualClass ? boatManualBoatClass?.value.trim() : boatClassList?.value;
+
+            if (!sailNum) { alert("Sail Number is required."); return; }
+            if (!boatClass) { alert("Boat Class is required."); return; }
+            if (!skipper) { alert("Skipper Name is required."); return; }
+            if (isNaN(yardstick) || yardstick <= 0) { alert("Valid positive Yardstick is required."); return; }
+
+            const duplicate = boatList.find(b => b.sailNumber.toUpperCase() === sailNum.toUpperCase() && b.id !== id);
+            if (duplicate) {
+                alert(`Error: Sail Number "${sailNum}" is already used by ${duplicate.skipper} (${duplicate.boatClass}). Sail Numbers must be unique.`);
+                return;
+            }
+
+            const boatData = { id: id || Date.now(), sailNumber: sailNum, boatClass: boatClass, skipper: skipper, yardstick: yardstick };
+            console.log("Boat data:", boatData); // Logging
+
+            if (id) {
+                const index = boatList.findIndex(b => b.id === id);
+                if (index !== -1) {
+                    console.log("Updating boat at index:", index); // Logging
+                    boatList[index] = boatData;
+                } else {
+                    alert("Error finding boat to update.");
+                    console.error("Could not find boat with ID", id, "to update."); // Logging
+                    return;
+                }
+            } else {
+                console.log("Adding new boat."); // Logging
+                boatList.push(boatData);
+            }
+
+            console.log("Boat list length:", boatList.length); // Logging
+            // REMOVED: saveBoatListToStorage();
+            renderBoatListTable();
+            clearBoatListForm();
+            showExportReminder(); // Remind user this is temporary
+        });
+
+        function editBoatInList(id) { /* ... MODIFIED title, no other change needed ... */
+            const boat = boatList.find(b => b.id === id);
+            if (!boat) return;
+            clearBoatListForm();
+            if(editingBoatId) editingBoatId.value = boat.id;
+            if(boatSailNumber) boatSailNumber.value = boat.sailNumber;
+            if(boatSkipper) boatSkipper.value = boat.skipper;
+            if(boatYardstick) boatYardstick.value = boat.yardstick;
+            if(boatFormTitle) boatFormTitle.textContent = `Edit Boat (Temp): ${boat.sailNumber}`; // Update title
+            const isStandardClass = yardstickData.some(yc => yc.boatClass === boat.boatClass);
+            if (isStandardClass && boatClassList && boatClassList.querySelector(`option[value="${boat.boatClass}"]`)) {
+                 if(boatManualClassCheck) boatManualClassCheck.checked = false;
+                 if(boatClassList) boatClassList.value = boat.boatClass;
+                 if(boatManualClassInput) boatManualClassInput.classList.add('hidden'); // Use class
+                 if(boatClassList) boatClassList.disabled = false;
+                 if(manualBoatClass) manualBoatClass.value = '';
+                 const selectedClassData = yardstickData.find(b => b.boatClass === boatClassList.value);
+                 const autoYardstick = selectedClassData ? selectedClassData.yardstick : null;
+                 if (autoYardstick !== null && boat.yardstick === autoYardstick) {
+                     if(boatManualYardstickCheck) boatManualYardstickCheck.checked = false;
+                     if(boatYardstick) boatYardstick.readOnly = true;
+                 } else {
+                     if(boatManualYardstickCheck) boatManualYardstickCheck.checked = true;
+                     if(boatYardstick) boatYardstick.readOnly = false;
+                 }
+             } else {
+                 if(boatManualClassCheck) boatManualClassCheck.checked = true;
+                 if(boatManualBoatClass) boatManualBoatClass.value = boat.boatClass;
+                 if(boatClassList) boatClassList.value = '';
+                 if(boatManualClassInput) boatManualClassInput.classList.remove('hidden'); // Use class
+                 if(boatClassList) boatClassList.disabled = true;
+                 if(boatManualYardstickCheck) boatManualYardstickCheck.checked = true;
+                 if(boatYardstick) boatYardstick.readOnly = false;
+             }
+            if(boatListForm) {
+                boatListForm.classList.remove('hidden'); // Use hidden class
+                boatListForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+        function deleteBoatFromList(id) { /* ... REMOVED saveBoatListToStorage() call ... */
+            const boatIndex = boatList.findIndex(b => b.id === id);
+            if (boatIndex === -1) return;
+            const boat = boatList[boatIndex];
+            if (confirm(`Are you sure you want to delete ${boat.sailNumber} (${boat.skipper}) from the boat list for this session? (This is temporary)`)) {
+                boatList.splice(boatIndex, 1);
+                // REMOVED: saveBoatListToStorage();
+                renderBoatListTable();
+                showExportReminder(); // Remind user this is temporary
+            }
+        }
+        // Link Boat List form controls to Yardstick Data (no changes needed)
+        if(boatClassList) boatClassList.addEventListener('change', () => { /* ... */ });
+        if(boatManualClassCheck) boatManualClassCheck.addEventListener('change', () => { /* ... */ });
+        if(boatManualYardstickCheck) boatManualYardstickCheck.addEventListener('change', () => { /* ... */ });
+
+
+        // --- Race Entry Functions --- (No major changes needed other than titles/reminders)
+        function populateSavedBoatDropdown() { /* ... */ }
+        if(selectSavedBoat) selectSavedBoat.addEventListener('change', () => { /* ... */ });
+        function clearEntryForm() { /* ... MODIFIED title */
+             if(sailNumber) sailNumber.value = '';
+             if(boatClassSelect) boatClassSelect.value = '';
+             if(skipperName) skipperName.value = '';
+             if(yardstickValue) yardstickValue.value = '';
+             if(elapsedTime) elapsedTime.value = '';
+             const finishedRadio = document.getElementById('status-finished');
+             if(finishedRadio) finishedRadio.checked = true;
+             // if(timeInputs) timeInputs.style.display = 'block';
+             if(manualBoatClass) manualBoatClass.value = '';
+             if(editingEntryIndexInput) editingEntryIndexInput.value = '-1';
+             if(editingShortCourseRaceIndexInput) editingShortCourseRaceIndexInput.value = '-1';
+             if(manualClassCheck) manualClassCheck.checked = false;
+             if(manualClassInput) manualClassInput.classList.add('hidden');
+             if(boatClassSelect) boatClassSelect.disabled = false;
+             if(manualYardstickCheck) manualYardstickCheck.checked = false;
+             if(yardstickValue) yardstickValue.readOnly = true;
+             if(addBoatBtn) addBoatBtn.style.display = 'inline-block';
+             if(updateBoatBtn) updateBoatBtn.classList.add('hidden');
+             if(cancelUpdateBtn) cancelUpdateBtn.classList.add('hidden');
+             if(selectSavedBoat) selectSavedBoat.value = '';
+             if(boatClassSelect) boatClassSelect.dispatchEvent(new Event('change'));
+             if(manualClassCheck) manualClassCheck.dispatchEvent(new Event('change'));
+             if(manualYardstickCheck) manualYardstickCheck.dispatchEvent(new Event('change'));
+             if (statusRadios.length > 0 && standardEntryFields && !standardEntryFields.classList.contains('hidden')) { handleStatusChange(); }
+             // Update title based on mode
+             const isShortCourse = currentSeries?.isShortCourse;
+             if (entryFormTitle) entryFormTitle.textContent = isShortCourse ? "Add/Edit Boat for Pool (This Session)" : "Add/Edit Boat Entry (This Session)";
+         }
+        if(boatClassSelect) boatClassSelect.addEventListener('change', () => { /* ... */ });
+        if(manualClassCheck) manualClassCheck.addEventListener('change', () => { /* ... */ });
+        if(manualYardstickCheck) manualYardstickCheck.addEventListener('change', () => { /* ... */ });
+        function handleStatusChange() { /* ... */ }
+        statusRadios.forEach(radio => radio.addEventListener('change', handleStatusChange));
+
+        // --- Add/Update/Remove Entries --- (No changes needed, these modify in-memory arrays)
+        if(addBoatBtn) addBoatBtn.addEventListener('click', () => { /* ... */ });
+        if(updateBoatBtn) updateBoatBtn.addEventListener('click', () => { /* ... */ });
+        if(cancelUpdateBtn) cancelUpdateBtn.addEventListener('click', () => { /* ... */ });
+        function getEntryFormData() { /* ... */ }
+        function renderEntriesTable() { /* ... */ }
+        function renderShortCoursePoolTable() { /* ... */ }
+        function editEntry(index) { /* ... */ }
+        function editShortCourseEntry(raceIndex, entryIndex) { /* ... */ }
+        function removeEntry(index) { /* ... */ }
+        function removeShortCourseEntry(raceIndex, entryIndex) { /* ... */ }
+        if(clearAllBtn) clearAllBtn.addEventListener('click', () => { /* ... */ });
+        if(clearFormBtn) clearFormBtn.addEventListener('click', () => { /* ... */ });
+
+        // --- Short Course Specific Functions --- (No changes needed, these modify in-memory arrays)
+        if (createShortCourseRaceBtn) createShortCourseRaceBtn.addEventListener('click', () => { /* ... */ });
+        function renderShortCourseSessionRaces() { /* ... */ }
+        function updateShortCourseEntry(raceIndex, entryIndex, field, value) { /* ... */ }
+        function updateCreateRaceButton() { /* ... */ }
+        function clearShortCourseSessionData() { /* ... */ }
+        if (clearShortCourseSessionBtn) clearShortCourseSessionBtn.addEventListener('click', () => { /* ... */ });
+
+        // --- Results Calculation --- (Calculates based on in-memory data, no storage calls)
+        if(calculateResultsBtn) calculateResultsBtn.addEventListener('click', () => {
+            if (currentSeries?.isShortCourse) {
+                 // --- SHORT COURSE CALCULATION & **SESSION UPDATE** ---
+                 if (shortCourseSessionRaces.length === 0) { /* ... */ }
+                 if (!currentSeries) { /* ... */ }
+                 console.log(`Calculating ${shortCourseSessionRaces.length} short course races for series: ${currentSeries.name} (this session)`);
+                 try {
+                     let racesAddedCount = 0;
+                     const seriesToUpdate = series.find(s => s.id === currentSeries.id);
+                     if (!seriesToUpdate) throw new Error("Could not find the series in the main data array.");
+                     const maxExistingRaceNum = seriesToUpdate.races.reduce((max, race) => Math.max(max, race.raceNumber), 0);
+                     let nextRaceNum = maxExistingRaceNum + 1;
+
+                     for (const sessionRaceData of shortCourseSessionRaces) {
+                         console.log(`Processing session race ${sessionRaceData.raceNumber} (to become Race ${nextRaceNum})`);
+                         const invalidTimeEntry = sessionRaceData.entries.find(e => e.status === 'finished' && !isValidTimeFormat(e.elapsedTime));
+                         if (invalidTimeEntry) throw new Error(`Invalid time format for ${invalidTimeEntry.sailNumber} in Race ${sessionRaceData.raceNumber}. Please correct before calculating.`);
+                         const calculatedResults = calculateSingleRaceResults(sessionRaceData.entries, seriesToUpdate);
+                         const raceToSave = { raceNumber: nextRaceNum, date: new Date().toISOString().split('T')[0], entries: JSON.parse(JSON.stringify(sessionRaceData.entries)), results: calculatedResults };
+                         seriesToUpdate.races.push(raceToSave);
+                         racesAddedCount++; nextRaceNum++;
+                     }
+                     seriesToUpdate.numberOfRaces = seriesToUpdate.races.length;
+                     seriesToUpdate.races.sort((a, b) => a.raceNumber - b.raceNumber);
+
+                     // REMOVED: saveSeriesToStorage();
+
+                     const seriesIdJustUpdated = seriesToUpdate.id;
+                     clearShortCourseSessionData();
+                     refreshSeriesDropdowns(); refreshSeriesList();
+
+                      alert(`${racesAddedCount} ${pluralize(racesAddedCount, 'race')} data updated in this session for series "${seriesToUpdate.name}".`);
+                      showExportReminder(); // Remind to export
+
+                      setActiveTab(raceViewTab);
+                      if(viewAllSeries) viewAllSeries.value = seriesIdJustUpdated;
+                      displayRaceViewer();
+
+                 } catch (error) { console.error("Error calculating short course races:", error); alert("Error: " + error.message); }
+
+            } else {
+                // --- STANDARD RACE CALCULATION (Remains the same, displays on Results Tab) ---
+                if (entries.length === 0) { /* ... */ }
+                if (!currentSeries || !currentRace) { /* ... */ }
+                results = calculateSingleRaceResults(entries, currentSeries, currentRace);
+                setActiveTab(resultsTab);
+                if (resultsSeries) resultsSeries.value = currentSeries.id;
+                updateResultsRaceDropdown(false);
+                if (resultsRace) { /* ... */ }
+                renderRaceResults();
+                disableDirectEditMode();
+                if (resultRaceInfo) { /* ... */ }
+            }
+        });
+        function calculateSingleRaceResults(raceEntries, targetSeries, raceNumberForOOD = null) { /* ... (no changes needed) */ }
+        function calculateOODPoints(sailNo, currentRaceCalculatedResults, targetSeries, oodRaceNumber) { /* ... (no changes needed) */ }
+
+
+        // --- Race Results Tab Functions ---
+        function renderRaceResults() { /* ... (no changes needed) */ }
+
+        if(saveResultsTabBtn) saveResultsTabBtn.addEventListener('click', () => { /* ... REMOVED saveSeriesToStorage() call ... */
+            const seriesId = resultsSeries?.value; const raceNumStr = resultsRace?.value;
+            if (!seriesId || !raceNumStr) { alert("Select Series and Race first."); return; }
+            const raceNum = parseInt(raceNumStr);
+            if (!results) { alert("No results data available to update."); return; }
+             // Removed confirmation for saving empty results, as it's temporary anyway
+            // if (results.length === 0 && !confirm(...)) { return; }
+            const targetSeries = series.find(s => s.id === parseInt(seriesId)); if (!targetSeries) { alert("Error: Series not found."); return; }
+            // Removed short course check as saving is now only in-memory update
+            // if (targetSeries.isShortCourse) { /* ... */ }
+            const raceIndex = targetSeries.races.findIndex(race => race.raceNumber === raceNum); if (raceIndex === -1) { alert(`Error: Race ${raceNum} not found in series.`); return; }
+            // Removed overwrite confirmation
+            // if (existingSavedResults && ... && !confirm(...)) { return; }
+            const resultsToSave = JSON.parse(JSON.stringify(results));
+            const entriesToSave = resultsToSave.map(res => ({ sailNumber: res.sailNumber, boatClass: res.boatClass, skipper: res.skipper, yardstick: res.yardstick, status: res.status, elapsedTime: res.elapsedTime || '' }));
+            let dateToSave = targetSeries.races[raceIndex].date || new Date().toISOString().split('T')[0];
+
+            try {
+                // Update the in-memory series object
+                targetSeries.races[raceIndex].date = dateToSave;
+                targetSeries.races[raceIndex].entries = entriesToSave;
+                targetSeries.races[raceIndex].results = resultsToSave;
+
+                // REMOVED: saveSeriesToStorage();
+                editMode = false; editModeWarning?.classList.add('hidden');
+                disableDirectEditMode();
+                alert(`Race ${raceNum} data updated in this session for series "${targetSeries.name}".`);
+                showExportReminder(); // Remind user
+
+                refreshSeriesDropdowns();
+                if (resultsSeries) resultsSeries.value = seriesId;
+                updateResultsRaceDropdown(false); if (resultsRace) resultsRace.value = raceNumStr;
+                loadRaceResults(); // Reload from the modified in-memory data
+                if (seriesResultsTab && seriesResultsTab.classList.contains('active-tab') && viewSeries?.value === seriesId) calculateSeriesResults();
+                if (raceViewTab && raceViewTab.classList.contains('active-tab') && viewAllSeries?.value === seriesId) {
+                    displayRaceViewer();
+                    const raceButton = raceSelector?.querySelector(`.race-button[data-race-number="${raceNum}"]`);
+                    if (raceButton) { /* ... */ }
+                }
+            } catch (error) { console.error("Error updating race results in session:", error); alert("Error updating race results for this session."); }
+        });
+
+        if(editRaceEntriesBtn) editRaceEntriesBtn.addEventListener('click', () => { /* ... (no changes needed) */ });
+        if(editResultsDirectlyBtn) editResultsDirectlyBtn.addEventListener('click', () => { /* ... (no changes needed) */ });
+        function enableDirectEditMode() { /* ... (no changes needed) */ }
+        function disableDirectEditMode() { /* ... (no changes needed) */ }
+        function showEditResultDialog(index) { /* ... (no changes needed) */ }
+        if(editStatusDirect) editStatusDirect.addEventListener('change', () => { /* ... (no changes needed) */ });
+        if(saveEditResult) saveEditResult.addEventListener('click', () => { /* ... (no changes needed) */ });
+        if(cancelEditResult) cancelEditResult.addEventListener('click', () => { /* ... (no changes needed) */ });
+
+
+        // --- Series Management ---
+        if (seriesShortCourseCheck) seriesShortCourseCheck.addEventListener('change', (e) => { /* ... (no changes needed) */ });
+        if(createSeriesBtn) createSeriesBtn.addEventListener('click', () => { /* ... (no changes needed) */ });
+
+        if(saveSeriesBtn) saveSeriesBtn.addEventListener('click', () => { /* ... REMOVED saveSeriesToStorage() call ... */
+            console.log("Attempting to save series (this session)...");
+            const name = seriesName?.value.trim();
+            const isShortCourse = seriesShortCourseCheck?.checked || false;
+            let races = parseInt(numberOfRaces?.value);
+            let discardThreshold = parseInt(racesPerDiscardInput?.value);
+            const editId = editSeriesId?.value;
+            const dncRuleInput = document.querySelector('input[name="dnc-scoring-rule"]:checked');
+            const dncScoringRule = dncRuleInput ? dncRuleInput.value : 'raceEntries';
+
+            if (!name) { /* ... */ }
+            if (isShortCourse) { discardThreshold = 0; /* races = 0; */ console.log("Saving as Short Course..."); }
+            else { if (isNaN(races) || isNaN(discardThreshold)) { /* ... */ } /* ... */ }
+
+            if (editId) {
+                const seriesIndex = series.findIndex(s => s.id === parseInt(editId));
+                if (seriesIndex !== -1) {
+                     console.log("Updating existing series:", name, "ID:", editId);
+                     const existingSeries = series[seriesIndex];
+                     // ... (logic for updating name, type, rules, races array remains the same) ...
+                     existingSeries.name = name;
+                     existingSeries.isShortCourse = isShortCourse; // Update type
+                     existingSeries.dncScoringRule = dncScoringRule;
+                     existingSeries.discardThreshold = discardThreshold; // Use adjusted value
+
+                     if (isShortCourse) {
+                          existingSeries.numberOfRaces = existingSeries.races.length;
+                     } else {
+                         const oldNumRaces = existingSeries.numberOfRaces;
+                         existingSeries.numberOfRaces = races;
+                          if (races > existingSeries.races.length) {
+                             const start = existingSeries.races.length + 1;
+                             for (let i = start; i <= races; i++) { existingSeries.races.push({ raceNumber: i, date: null, entries: [], results: [] }); }
+                         } else if (races < existingSeries.races.length) {
+                              const racesToRemove = existingSeries.races.slice(races);
+                              const hasResultsInRemoved = racesToRemove.some(r => r.results && r.results.length > 0);
+                              // Keep confirmation simple as it's temporary
+                              if (hasResultsInRemoved && !confirm(`Reducing races removes races ${races + 1}-${existingSeries.races.length} and their results for this session. Continue?`)) {
+                                  if (numberOfRaces) numberOfRaces.value = existingSeries.races.length;
+                                  existingSeries.numberOfRaces = existingSeries.races.length;
+                                  return;
+                              }
+                              existingSeries.races = existingSeries.races.slice(0, races);
+                          }
+                     }
+                     alert(`Series "${name}" updated for this session.`);
+                } else { /* ... */ }
+            } else {
+                 console.log("Creating new series (this session):", name);
+                 const newSeries = { id: Date.now(), name, isShortCourse: isShortCourse, numberOfRaces: isShortCourse ? 0 : races, discardThreshold: discardThreshold, dncScoringRule: dncScoringRule, races: [] };
+                 if (!isShortCourse) { for (let i = 1; i <= races; i++) { newSeries.races.push({ raceNumber: i, date: null, entries: [], results: [] }); } }
+                 series.push(newSeries);
+                 alert(`Series "${name}" (${isShortCourse ? 'Short Course' : 'Standard'}) created for this session.`);
+            }
+
+            // REMOVED: saveSeriesToStorage();
+            refreshSeriesList();
+            refreshSeriesDropdowns();
+            if(createSeriesForm) createSeriesForm.classList.add('hidden');
+            showExportReminder(); // Remind user
+        });
+
+        if(cancelSeriesBtn) cancelSeriesBtn.addEventListener('click', () => { /* ... (no changes needed) */ });
+        function refreshSeriesList() { /* ... (no changes needed) */ }
+        function editSeries(id) { /* ... (no changes needed) */ }
+        function deleteSeries(id) { /* ... REMOVED saveSeriesToStorage() call ... */
+            const seriesIndex = series.findIndex(s => s.id === id); if (seriesIndex === -1) return; const s = series[seriesIndex];
+            if (confirm(`DELETE Series "${s.name}" and ALL its data for this session? (This is temporary)`)) {
+                series.splice(seriesIndex, 1);
+                // REMOVED: saveSeriesToStorage();
+                refreshSeriesList(); refreshSeriesDropdowns();
+                // Clear selections if the deleted series was selected
+                if (selectSeries?.value == id) selectSeries.value = "";
+                if (resultsSeries?.value == id) { resultsSeries.value = ""; loadRaceResults(); }
+                if (viewSeries?.value == id) { viewSeries.value = ""; calculateSeriesResults(); }
+                if (viewAllSeries?.value == id) { viewAllSeries.value = ""; displayRaceViewer();}
+                if (currentSeries && currentSeries.id === id) { /* ... clear state ... */ }
+                alert(`Series "${s.name}" deleted for this session.`);
+                showExportReminder(); // Remind user
+            }
+        }
+
+        // --- Dropdown and State Management --- (No changes needed)
+        function refreshSeriesDropdowns() { /* ... */ }
+        function updateRaceEntryUI() { /* ... */ }
+        function switchToStandardRaceUI() { /* ... */ }
+        function switchToShortCourseUI() { /* ... */ }
+        function updateRaceDropdown() { /* ... */ }
+        function updateResultsRaceDropdown(loadResultsAfterUpdate = true) { /* ... */ }
+        function populateRaceOptions(dropdown, seriesData, showDetails) { /* ... */ }
+        function updateRaceInfoAndEntries() { /* ... */ }
+        // Dropdown event listeners
+        if(selectSeries) selectSeries.addEventListener('change', updateRaceEntryUI);
+        if(selectRace) selectRace.addEventListener('change', () => { /* ... */ });
+        if(resultsSeries) resultsSeries.addEventListener('change', () => updateResultsRaceDropdown(true));
+        if(resultsRace) resultsRace.addEventListener('change', () => { /* ... */ });
+        if(viewSeries) viewSeries.addEventListener('change', calculateSeriesResults);
+        if(viewAllSeries) viewAllSeries.addEventListener('change', displayRaceViewer);
+
+
+        // --- Load Race Results (Results Tab) --- (No changes needed)
+        function loadRaceResults() { /* ... */ }
+
+        // --- Series Results Calculation --- (No changes needed)
+        function calculateSeriesResults() { /* ... */ }
+        function calculateOODPointsSeriesContext(sailNo, oodRaceNumber, seriesData, competitorMap) { /* ... */ }
+        function checkTieBrokenSeries(boatA, boatB, raceNums, isShort, discardsApplied) { /* ... */ }
+
+
+        // --- Race Viewer Functions --- (No changes needed)
+        function displayRaceViewer() { /* ... */ }
+        function displayRaceResultsView(selectedSeriesData, raceNumber) { /* ... */ }
+
+        // --- Local Storage (REMOVED) ---
+        // const SERIES_STORAGE_KEY = '...'; // Not used
+        // const BOATLIST_STORAGE_KEY = '...'; // Not used
+        // function saveSeriesToStorage() { /* REMOVED */ }
+        // function loadSeriesFromStorage() { /* REMOVED - Handled by fetch in initApp */ }
+        // function saveBoatListToStorage() { /* REMOVED */ }
+        // function loadBoatListFromStorage() { /* REMOVED - Handled by fetch in initApp */ }
+
+        // --- Export Data Function (MODIFIED) ---
+        function exportAllData() {
+            if (series.length === 0 && boatList.length === 0) { alert("No data (series or boats) currently loaded or created to export."); return; }
+
+            // **Add warning first**
+            alert("Prepare to download 'backup.json'. You MUST upload this file to your GitHub repository, replacing the existing one, to update the live results page.");
+
+            try {
+                const exportData = {
+                    version: "LysterfieldResultsApp_GitHub_v1.0", // Indicate version
+                    exportDate: new Date().toISOString(),
+                    seriesData: series, // Use current in-memory data
+                    boatListData: boatList // Use current in-memory data
+                };
+                const jsonString = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `backup.json`; // Set specific filename
+                document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+                // No success alert needed as the warning was given before download
+            } catch (error) { console.error("Error during data export:", error); alert("An error occurred while exporting data."); }
+        }
+
+        // --- Import Data Function (REMOVED) ---
+        // function importData(event) { /* REMOVED */ }
+        // function exportBoatList() { /* REMOVED */ }
+        // function importBoatList(event) { /* REMOVED */ }
+
+
+        // --- Initialization (MODIFIED) ---
+        async function initApp() {
+            console.log("Initializing Sailing App for GitHub Pages...");
+            initYardsticks();
+
+            // Default empty data
+            series = [];
+            boatList = [];
+
+            try {
+                // Fetch the primary data source
+                const response = await fetch('./backup.json'); // Fetch the file relative to the HTML page
+
+                if (!response.ok) {
+                    // Handle file not found (e.g., first run) or other HTTP errors
+                    if (response.status === 404) {
+                         console.warn("backup.json not found. Starting with empty data.");
+                         alert("backup.json not found. Starting with a blank slate. Create data and export as backup.json to the repository.");
+                    } else {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    // Keep series and boatList as empty arrays
+                } else {
+                    const data = await response.json();
+
+                    // --- Validation/Processing (similar to importData) ---
+                    if (data && Array.isArray(data.seriesData) && Array.isArray(data.boatListData)) {
+                        console.log("Loaded data structure version:", data.version || "Unknown");
+
+                        // Validate/Process seriesData (Use validation logic from load/import)
+                        series = data.seriesData.map((s, index) => {
+                             if (!s || typeof s !== 'object') { console.warn(`Invalid series data at index ${index}, skipping.`); return null; }
+                             if (!s.id) s.id = Date.now() + index;
+                             if (!s.name) s.name = `Series ${s.id}`;
+                             if (!s.races || !Array.isArray(s.races)) s.races = [];
+                             if (!s.hasOwnProperty('isShortCourse')) s.isShortCourse = false;
+                             if (s.hasOwnProperty('discards') && !s.hasOwnProperty('discardThreshold')) { s.discardThreshold = 0; delete s.discards; }
+                             else if (!s.hasOwnProperty('discardThreshold') || typeof s.discardThreshold !== 'number' || isNaN(s.discardThreshold) || s.discardThreshold < 0) { s.discardThreshold = 0; }
+                             if (!s.hasOwnProperty('dncScoringRule') || !['raceEntries', 'seriesCompetitors'].includes(s.dncScoringRule)) { s.dncScoringRule = 'raceEntries'; }
+                             if (!s.isShortCourse) {
+                                if (typeof s.numberOfRaces !== 'number' || isNaN(s.numberOfRaces) || s.numberOfRaces < 0) { s.numberOfRaces = s.races.length > 0 ? Math.max(...s.races.map(r => r.raceNumber || 0), s.races.length) : 0; }
+                                const expectedNumRaces = s.numberOfRaces || 0;
+                                if (s.races.length !== expectedNumRaces) {
+                                    let existingRacesData = new Map(); s.races.forEach((r, r_idx) => { if (r && r.raceNumber) existingRacesData.set(r.raceNumber, r); else if(r) existingRacesData.set(r_idx + 1, r); });
+                                    s.races = [];
+                                    for (let i = 1; i <= expectedNumRaces; i++) { const existing = existingRacesData.get(i); s.races.push({ raceNumber: i, date: existing?.date || null, entries: existing?.entries && Array.isArray(existing.entries) ? existing.entries : [], results: existing?.results && Array.isArray(existing.results) ? existing.results : [] }); }
+                                }
+                             } else { s.numberOfRaces = s.races.length; }
+                             s.races = s.races.map((r, r_idx) => { if (!r || typeof r !== 'object') { return { raceNumber: r_idx + 1, date: null, entries: [], results: [] }; } if (!r.hasOwnProperty('raceNumber') || typeof r.raceNumber !== 'number') r.raceNumber = r_idx + 1; if (!r.hasOwnProperty('entries') || !Array.isArray(r.entries)) r.entries = []; if (!r.hasOwnProperty('results') || !Array.isArray(r.results)) r.results = []; if (!r.hasOwnProperty('date')) r.date = null; return r; });
+                             s.races.sort((a, b) => (a.raceNumber || 0) - (b.raceNumber || 0));
+                             return s;
+                         }).filter(s => s !== null);
+
+                        // Validate/Process boatListData (Use validation logic from load/import)
+                        const existingIds = new Set();
+                        boatList = data.boatListData.map((b, index) => {
+                             if (!b || typeof b !== 'object') return null;
+                             let id = b.id; if (!id || (typeof id !== 'number' && typeof id !== 'string') || existingIds.has(id)) { id = Date.now() + index + Math.random(); }
+                             existingIds.add(id); const sailNumber = (typeof b.sailNumber === 'string' || typeof b.sailNumber === 'number') ? String(b.sailNumber).toUpperCase().trim() : `Imported_${index}`; const boatClass = typeof b.boatClass === 'string' ? b.boatClass.trim() : 'Unknown'; const skipper = typeof b.skipper === 'string' ? b.skipper.trim() : 'Unknown'; const yardstick = typeof b.yardstick === 'number' && !isNaN(b.yardstick) ? b.yardstick : 0;
+                             if (!sailNumber || !boatClass || !skipper || yardstick <= 0) { console.warn(`Imported boat missing data, skipping: ID ${id}`); return null; }
+                             return { id, sailNumber, boatClass, skipper, yardstick };
+                        }).filter(b => b !== null);
+
+                        console.log("Data loaded successfully from backup.json");
+                    } else {
+                         console.warn("backup.json exists but has unexpected format. Using empty data.");
+                         alert("backup.json has an invalid format. Starting with a blank slate. Check the file structure.");
+                         series = []; // Reset to empty
+                         boatList = []; // Reset to empty
+                    }
+                }
+
+            } catch (error) {
+                console.error("Could not fetch or parse backup.json:", error);
+                alert("Error loading data from backup.json: " + error.message + ". Starting with a blank slate.");
+                series = []; // Ensure reset on error
+                boatList = []; // Ensure reset on error
+            }
+
+            // --- Initialize UI (AFTER data is potentially loaded/processed) ---
+            refreshSeriesList();
+            refreshSeriesDropdowns(); // Triggers UI updates based on loaded data
+            renderBoatListTable();
+            populateSavedBoatDropdown();
+            setActiveTab(seriesTab); // Default to series tab
+
+            // Attach Export Listener (Import listeners removed)
+            if (exportGithubBtn) exportGithubBtn.addEventListener('click', exportAllData);
+
+            // Remove event listeners for removed import buttons if they were somehow cached
+            // (Better to just remove the button elements from HTML)
+
+            console.log("App Initialized for GitHub Pages.");
+            console.log("Initial Series Data:", series); // Log initial data
+            console.log("Initial Boat List:", boatList); // Log initial data
+        }
+
+
+        // Make functions globally accessible for onclick handlers/inline events
+         window.editEntry = editEntry;
+         window.removeEntry = removeEntry;
+         window.editSeries = editSeries;
+         window.deleteSeries = deleteSeries;
+         window.showEditResultDialog = showEditResultDialog;
+         window.editBoatInList = editBoatInList;
+         window.deleteBoatFromList = deleteBoatFromList;
+         window.editShortCourseEntry = editShortCourseEntry;
+         window.removeShortCourseEntry = removeShortCourseEntry;
+         window.updateShortCourseEntry = updateShortCourseEntry;
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', initApp);
+
+    </script>
+</body>
+</html>
